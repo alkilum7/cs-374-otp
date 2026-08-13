@@ -10,6 +10,30 @@
 
 static int BUF_SIZE = 100000;
 
+void send_chunks(int connected_socket, char *buf, int len) {
+    int rem = len;
+    char *src = buf;
+    while(rem > 0) {
+        int chunk_size = 1000;
+        if(rem < 1000) chunk_size = rem;
+        rem -= chunk_size;
+        send(connected_socket, src, chunk_size, 0);
+        src += chunk_size;
+    }
+}
+
+void read_chunks(int connected_socket, char *buf, int len) {
+    int rem = len;
+    char *dest = buf;
+    while(rem > 0) {
+        int chunk_size = 1000;
+        if(rem < 1000) chunk_size = rem;
+        rem -= chunk_size;
+        recv(connected_socket, dest, chunk_size, 0);
+        dest += chunk_size;
+    }
+}
+
 void usage_error() {
     perror("Usage: dec_client [plaintext] [key] [port]");
     exit(1);
@@ -47,6 +71,14 @@ int is_valid(char text[], int len) {
     return 1;
 }
 
+void waitok(int server_socket) {
+    char ok_buff[2];
+    if(recv(server_socket, ok_buff, 2, 0) != 2) {
+        perror("Did not receive OK");
+        exit(1);
+    }
+}
+
 int main(int argc, char *argv[]) {
     // Parse, check usage
     if(argc != 4) {
@@ -76,8 +108,14 @@ int main(int argc, char *argv[]) {
         exit(1);
     }
 
-    if(!is_valid(text, text_len) || !is_valid(key, key_len)) {
+    if(!is_valid(text, text_len)) {
         perror("dec_client error: input contains bad characters");
+        exit(1);
+    }
+
+    if(!is_valid(key, text_len)) {
+        perror("dec_client error: key contains bad characters");
+        exit(1);
     }
 
     int server_socket = socket(AF_INET, SOCK_STREAM, 0);
@@ -87,30 +125,19 @@ int main(int argc, char *argv[]) {
     char *greeting = "I AM DEC_CLIENT";
     send(server_socket, greeting, strlen(greeting), 0);
 
-    // Wait for "OK"
-    char ok_buff[2];
-    if(recv(server_socket, ok_buff, 2, 0) != 2) {
-        perror("Did not receive OK");
-        exit(1);
-    }
+    /// Wait for "OK"
+    waitok(server_socket);
 
-    // Send text
-    send(server_socket, text, strlen(text), 0);
+    // Send text length as integer
+    send(server_socket, &text_len, 4, 0);
 
-    // Wait for "GIVE KEY"
-    char give_key_buf[8];
-    if(recv(server_socket, give_key_buf, 8, 0) != 8) {
-        perror("Did not receive GIVE KEY");
-        exit(1);
-    }
-
-    // Send key
-    send(server_socket, key, strlen(text), 0);
-    send(server_socket, "\n", 1, 0);
+    // Send text and key
+    send_chunks(server_socket, text, text_len);
+    send_chunks(server_socket, key, text_len);
 
     // Receive result
     char result_buf[BUF_SIZE];
-    int result_len = recv(server_socket, result_buf, BUF_SIZE, 0);
+    read_chunks(server_socket, result_buf, text_len);
 
     // Print result
     write(STDOUT_FILENO, result_buf, text_len);

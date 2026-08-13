@@ -7,6 +7,33 @@
 #include <unistd.h>
 #include <sys/types.h>
 #include <errno.h>
+#include <signal.h>
+
+static int BUF_SIZE = 100000;
+
+void send_chunks(int connected_socket, char *buf, int len) {
+    int rem = len;
+    char *src = buf;
+    while(rem > 0) {
+        int chunk_size = 1000;
+        if(rem < 1000) chunk_size = rem;
+        rem -= chunk_size;
+        send(connected_socket, src, chunk_size, 0);
+        src += chunk_size;
+    }
+}
+
+void read_chunks(int connected_socket, char *buf, int len) {
+    int rem = len;
+    char *dest = buf;
+    while(rem > 0) {
+        int chunk_size = 1000;
+        if(rem < 1000) chunk_size = rem;
+        rem -= chunk_size;
+        recv(connected_socket, dest, chunk_size, 0);
+        dest += chunk_size;
+    }
+}
 
 int char_to_code(char c) {
     if(c == ' ') return 0;
@@ -53,27 +80,21 @@ void serve_client(int connected_socket) {
     send(connected_socket, "OK", 2, 0);
 
     // Get plaintext and key
-    char text[1024];
-    char key[1024];
+    char text[BUF_SIZE];
+    char key[BUF_SIZE];
 
-    // Get text
-    int text_len = recv(connected_socket, text, 1024, 0);
+    // Receive text_len
+    int text_len;
+    recv(connected_socket, &text_len, 4, 0);
 
-    // Send "GIVE KEY"
-    send(connected_socket, "GIVE KEY", 8, 0);
-
-    // Get key
-    int key_len = recv(connected_socket, key, 1024, 0);
-
-    if(key_len < text_len) {
-        perror("Error: Key length less than text length");
-        exit(1);
-    }
+    // Receive text and key
+    read_chunks(connected_socket, text, text_len);
+    read_chunks(connected_socket, key, text_len);
 
     // Return result
-    char result[1024];
+    char result[BUF_SIZE];
     pad(text, text_len, key, result);
-    send(connected_socket, result, text_len, 0);
+    send_chunks(connected_socket, result, text_len);
 
     // Exit successfully
     exit(0);
@@ -83,7 +104,9 @@ void check_children(int child_pids[5]) {
     for(int i = 0; i < 5; i++) {
         if(child_pids[i] > -1) {
             int state = waitpid(child_pids[i], NULL, WNOHANG);
-            if(state != 0) child_pids[i] = -1;
+            if(state != 0) {
+                child_pids[i] = -1;
+            }
         }
     }
 }
