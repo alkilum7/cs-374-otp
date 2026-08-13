@@ -141,7 +141,7 @@ int main(int argc, char *argv[]) {
     while(1) {
         check_children(child_pids);
         struct sockaddr client;
-        int client_len;
+        socklen_t client_len = sizeof(client);
         int connected_socket = accept(in_socket, &client, &client_len);
         int pid = fork();
         if(pid == 0) {
