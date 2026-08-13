@@ -27,11 +27,9 @@ void read_chunks(int connected_socket, char *buf, int len) {
     int rem = len;
     char *dest = buf;
     while(rem > 0) {
-        int chunk_size = 1000;
-        if(rem < 1000) chunk_size = rem;
-        rem -= chunk_size;
-        recv(connected_socket, dest, chunk_size, 0);
-        dest += chunk_size;
+        int bytes_received = recv(connected_socket, dest, rem, 0);
+        rem -= bytes_received;
+        dest += bytes_received;
     }
 }
 
@@ -62,7 +60,7 @@ void pad(char *text, int text_len, char *key, char *result) {
 void serve_client(int connected_socket) {
     // Receive greeting message
     char greeting_buf[256];
-    int greeting_len = read(connected_socket, greeting_buf, 256);
+    read_chunks(connected_socket, greeting_buf, 15);
     char *expected_greeting = "I AM ENC_CLIENT";
     if(
         memcmp(
@@ -72,13 +70,13 @@ void serve_client(int connected_socket) {
         ) != 0
     ) {
         perror("Could not verify enc_client, connection refused");
-        fprintf(stderr, "Recieved message: %s", greeting_buf);
         send(connected_socket, "!", 1, 0);
         exit(1);
     }
 
-    // Send OK
-    send(connected_socket, "OK", 2, 0);
+    // Send greeting
+    char *greeting = "I AM ENC_SERVER";
+    send(connected_socket, greeting, strlen(greeting), 0);
 
     // Set up text and key buffers
     char text[BUF_SIZE];
@@ -86,7 +84,7 @@ void serve_client(int connected_socket) {
 
     // Receive text_len
     int text_len;
-    recv(connected_socket, &text_len, 4, 0);
+    read_chunks(connected_socket, (char *) &text_len, 4);
 
     // Receive text and key
     read_chunks(connected_socket, text, text_len);
@@ -133,7 +131,7 @@ int main(int argc, char *argv[]) {
         sizeof(server_address)
     );
     if(bind_error) {
-        printf("Return value: %d\n", bind_error);
+        printf("Bind error: return value: %d\n", bind_error);
         printf("Errno: %d\n", errno);
         fflush(stdout);
     }

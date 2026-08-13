@@ -26,11 +26,9 @@ void read_chunks(int connected_socket, char *buf, int len) {
     int rem = len;
     char *dest = buf;
     while(rem > 0) {
-        int chunk_size = 1000;
-        if(rem < 1000) chunk_size = rem;
-        rem -= chunk_size;
-        recv(connected_socket, dest, chunk_size, 0);
-        dest += chunk_size;
+        int bytes_received = recv(connected_socket, dest, rem, 0);
+        rem -= bytes_received;
+        dest += bytes_received;
     }
 }
 
@@ -69,14 +67,6 @@ int is_valid(char text[], int len) {
         }
     }
     return 1;
-}
-
-void waitok(int server_socket) {
-    char ok_buff[2];
-    if(recv(server_socket, ok_buff, 2, 0) != 2) {
-        perror("Did not receive OK");
-        exit(1);
-    }
 }
 
 int main(int argc, char *argv[]) {
@@ -125,8 +115,20 @@ int main(int argc, char *argv[]) {
     char *greeting = "I AM ENC_CLIENT";
     send(server_socket, greeting, strlen(greeting), 0);
 
-    // Wait for "OK"
-    waitok(server_socket);
+    // Wait for server greeting
+    char greeting_buf[256];
+    read_chunks(server_socket, greeting_buf, 15);
+    char *expected_greeting = "I AM ENC_SERVER";
+    if(
+        memcmp(
+            greeting_buf,
+            expected_greeting,
+            strlen(expected_greeting)
+        ) != 0
+    ) {
+        perror("Could not verify enc_server, connection refused");
+        exit(1);
+    }
 
     // Send text length as integer
     send(server_socket, &text_len, 4, 0);
