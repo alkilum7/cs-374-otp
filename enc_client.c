@@ -103,20 +103,12 @@ int main(int argc, char *argv[]) {
         exit(1);
     }
 
-    printf("I am about to open the socket.\n");
-    fflush(stdout);
     int server_socket = socket(AF_INET, SOCK_STREAM, 0);
     get_socket(&server_socket, port);
-    printf("I got the socket.\n");
-    fflush(stdout);
     // Send and receive data
     // Send greeting
-    printf("I am about to send the greeting message.\n");
-    fflush(stdout);
     char *greeting = "I AM ENC_CLIENT";
     send_chunks(server_socket, greeting, strlen(greeting));
-    printf("I successfully sent the greeting message.\n");
-    fflush(stdout);
 
     // Wait for server greeting
     char greeting_buf[256];
@@ -132,13 +124,9 @@ int main(int argc, char *argv[]) {
         perror("Could not verify enc_server, connection refused");
         exit(1);
     }
-    printf("I verified the server.\n");
-    fflush(stdout);
 
     // Send text length as integer
     send_chunks(server_socket, (char *) &text_len, 4);
-    printf("I sent the length of the text\n");
-    fflush(stdout);
 
     // Send text and key
     send_chunks(server_socket, text, text_len);
