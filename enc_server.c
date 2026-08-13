@@ -72,7 +72,7 @@ void serve_client(int connected_socket) {
         ) != 0
     ) {
         perror("Could not verify enc_client, connection refused");
-        perror("Recieved message: %s", greeting_buf);
+        fprintf(stderr, "Recieved message: %s", greeting_buf);
         send(connected_socket, "!", 1, 0);
         exit(1);
     }
