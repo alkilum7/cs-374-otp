@@ -8,6 +8,8 @@
 #include <sys/types.h>
 #include <errno.h>
 
+static int BUF_SIZE = 100000;
+
 void usage_error() {
     perror("Usage: dec_client [plaintext] [key] [port]");
     exit(1);
@@ -62,10 +64,10 @@ int main(int argc, char *argv[]) {
         perror("File read error");
         exit(1);
     }
-    char text[1024];
-    char key[1024];
-    fgets(text, 1024, text_file);
-    fgets(key, 1024, key_file);
+    char text[BUF_SIZE];
+    char key[BUF_SIZE];
+    fgets(text, BUF_SIZE, text_file);
+    fgets(key, BUF_SIZE, key_file);
     int text_len = strlen(text) - 1;
     int key_len = strlen(key) - 1;
 
@@ -107,8 +109,8 @@ int main(int argc, char *argv[]) {
     send(server_socket, "\n", 1, 0);
 
     // Receive result
-    char result_buf[1024];
-    int result_len = recv(server_socket, result_buf, 1024, 0);
+    char result_buf[BUF_SIZE];
+    int result_len = recv(server_socket, result_buf, BUF_SIZE, 0);
 
     // Print result
     write(STDOUT_FILENO, result_buf, text_len);
