@@ -40,13 +40,7 @@ void usage_error() {
 void get_socket(int *server_socket, int port) {
     // Connect to the server
     struct sockaddr_in server_addr;
-    struct hostent *server_hostent = gethostbyname("localhost");
-    if(server_hostent == NULL) {
-        perror("ERROR: could not find localhost");
-        exit(1);
-    }
-    // Copy the IP Address
-    server_addr.sin_addr.s_addr = *(server_hostent->h_addr_list[0]);
+    server_addr.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
     server_addr.sin_family = AF_INET;
     server_addr.sin_port = htons(port);
     int connect_retval = connect(
@@ -57,6 +51,7 @@ void get_socket(int *server_socket, int port) {
     if(connect_retval != 0) {
         printf("Connect retval: %d\n", connect_retval);
         printf("Errno: %d\n", errno);
+        exit(1);
     }
 }
 

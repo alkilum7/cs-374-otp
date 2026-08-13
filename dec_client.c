@@ -57,6 +57,7 @@ void get_socket(int *server_socket, int port) {
     if(connect_retval != 0) {
         printf("Connect retval: %d\n", connect_retval);
         printf("Errno: %d\n", errno);
+        exit(1);
     }
 }
 
