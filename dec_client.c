@@ -103,7 +103,7 @@ int main(int argc, char *argv[]) {
     }
 
     // Send key
-    send(server_socket, key, strlen(key), 0);
+    send(server_socket, key, strlen(text), 0);
     send(server_socket, "\n", 1, 0);
 
     // Receive result
