@@ -117,7 +117,7 @@ int main(int argc, char *argv[]) {
     if(port <= 0) usage_error();
 
     // Set up the array for process tracking
-    int child_pids[5] = {-1};
+    int child_pids[5] = {-1, -1, -1, -1, -1};
 
     // Set up the socket
     int in_socket = socket(AF_INET, SOCK_STREAM, 0);

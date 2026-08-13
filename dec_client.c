@@ -82,7 +82,7 @@ int main(int argc, char *argv[]) {
     // Attempt to open files
     FILE *text_file = fopen(argv[1], "r");
     FILE *key_file = fopen(argv[2], "r");
-    if(text_file < 0 || key_file < 0) {
+    if(text_file == NULL || key_file == NULL) {
         perror("File read error");
         exit(1);
     }

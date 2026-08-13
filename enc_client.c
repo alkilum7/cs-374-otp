@@ -82,7 +82,7 @@ int main(int argc, char *argv[]) {
     // Attempt to open files
     FILE *text_file = fopen(argv[1], "r");
     FILE *key_file = fopen(argv[2], "r");
-    if(text_file < 0 || key_file < 0) {
+    if(text_file == NULL || key_file == NULL) {
         perror("File read error");
         exit(1);
     }
@@ -112,8 +112,12 @@ int main(int argc, char *argv[]) {
     get_socket(&server_socket, port);
     // Send and receive data
     // Send greeting
+    fprintf(stderr, "I am about to send the greeting message.\n");
+    fflush(stderr);
     char *greeting = "I AM ENC_CLIENT";
     send_chunks(server_socket, greeting, strlen(greeting));
+    fprintf(stderr, "I successfully sent the greeting message.\n");
+    fflush(stderr);
 
     // Wait for server greeting
     char greeting_buf[256];
@@ -129,9 +133,13 @@ int main(int argc, char *argv[]) {
         perror("Could not verify enc_server, connection refused");
         exit(1);
     }
+    fprintf(stderr, "I verified the server.\n");
+    fflush(stderr);
 
     // Send text length as integer
     send_chunks(server_socket, (char *) &text_len, 4);
+    fprintf(stderr, "I sent the length of the text\n");
+    fflush(stderr);
 
     // Send text and key
     send_chunks(server_socket, text, text_len);
