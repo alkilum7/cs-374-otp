@@ -19,7 +19,7 @@ char code_to_char(int i) {
 }
 
 void usage_error() {
-    perror("Usage: enc_server [port]");
+    perror("Usage: dec_server [port]");
     exit(1);
 }
 
@@ -27,7 +27,7 @@ void pad(char *text, int text_len, char *key, char *result) {
     for(int i = 0; i < text_len; i++) {
         int text_code = char_to_code(text[i]);
         int key_code = char_to_code(key[i]);
-        int result_code = (text_code + key_code) % 27;
+        int result_code = ((text_code - key_code) + 54) % 27;
         result[i] = code_to_char(result_code);
     }
 }
@@ -36,7 +36,7 @@ void serve_client(int connected_socket) {
     // Receive greeting message
     char greeting_buf[256];
     int greeting_len = read(connected_socket, greeting_buf, 256);
-    char *expected_greeting = "I AM ENC_CLIENT";
+    char *expected_greeting = "I AM DEC_CLIENT";
     if(
         memcmp(
             greeting_buf,
@@ -44,7 +44,7 @@ void serve_client(int connected_socket) {
             strlen(expected_greeting)
         ) != 0
     ) {
-        perror("Could not verify enc_client, connection refused");
+        perror("Could not verify dec_client, connection refused");
         send(connected_socket, "!", 1, 0);
         exit(1);
     }

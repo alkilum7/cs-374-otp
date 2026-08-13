@@ -9,7 +9,7 @@
 #include <errno.h>
 
 void usage_error() {
-    perror("Usage: enc_client [plaintext] [key] [port]");
+    perror("Usage: dec_client [plaintext] [key] [port]");
     exit(1);
 }
 
@@ -75,14 +75,14 @@ int main(int argc, char *argv[]) {
     }
 
     if(!is_valid(text, text_len) || !is_valid(key, key_len)) {
-        perror("enc_client error: input contains bad characters");
+        perror("dec_client error: input contains bad characters");
     }
 
     int server_socket = socket(AF_INET, SOCK_STREAM, 0);
     get_socket(&server_socket, port);
     // Send and receive data
     // Send greeting
-    char *greeting = "I AM ENC_CLIENT";
+    char *greeting = "I AM DEC_CLIENT";
     send(server_socket, greeting, strlen(greeting), 0);
 
     // Wait for "OK"
