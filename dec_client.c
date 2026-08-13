@@ -16,8 +16,8 @@ void send_chunks(int connected_socket, char *buf, int len) {
     while(rem > 0) {
         int chunk_size = 1000;
         if(rem < 1000) chunk_size = rem;
+        chunk_size = send(connected_socket, src, chunk_size, 0);
         rem -= chunk_size;
-        send(connected_socket, src, chunk_size, 0);
         src += chunk_size;
     }
 }

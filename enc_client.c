@@ -16,8 +16,8 @@ void send_chunks(int connected_socket, char *buf, int len) {
     while(rem > 0) {
         int chunk_size = 1000;
         if(rem < 1000) chunk_size = rem;
+        chunk_size = send(connected_socket, src, chunk_size, 0);
         rem -= chunk_size;
-        send(connected_socket, src, chunk_size, 0);
         src += chunk_size;
     }
 }
@@ -113,7 +113,7 @@ int main(int argc, char *argv[]) {
     // Send and receive data
     // Send greeting
     char *greeting = "I AM ENC_CLIENT";
-    send(server_socket, greeting, strlen(greeting), 0);
+    send_chunks(server_socket, greeting, strlen(greeting));
 
     // Wait for server greeting
     char greeting_buf[256];
@@ -131,7 +131,7 @@ int main(int argc, char *argv[]) {
     }
 
     // Send text length as integer
-    send(server_socket, &text_len, 4, 0);
+    send_chunks(server_socket, (char *) &text_len, 4);
 
     // Send text and key
     send_chunks(server_socket, text, text_len);
